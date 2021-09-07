@@ -1,0 +1,85 @@
+# Note: there are many handy hints in comments in this example -- remove them when you've finalized your recipe
+
+# Jinja variables help maintain the recipe as you'll update the version only here.
+# Using the name variable with the URL in line 14 is convenient
+# when copying and pasting from another recipe, but not really needed.
+{% set name = "ogs" %}
+{% set version = "6.4.1" %}
+
+package:
+  name: {{ name|lower }}
+  version: {{ version }}
+
+source:
+  #url: https://gitlab.opengeosys.org/{{ name }}/{{ name }}/-/archive/{{ version }}/{{ name }}-{{ version }}.tar.gz
+  url: https://gitlab.opengeosys.org/ogs/ogs/-/archive/7e8be6ed21e11487dbc9a5d3a15d3f4cdf21f5f5/ogs-7e8be6ed21e11487dbc9a5d3a15d3f4cdf21f5f5.tar.gz 
+  #sha256: f0b252042788a59e944d833dbb50fe82b95ebef2aab427d56454d317d45175f3
+  sha256: 92a2f56828564054c5561d81d443108f539550cbd39877d9fee615d55894ae9b
+  patches:
+    - ogs.patch
+
+build:
+  # Uncomment the following line if the package is pure Python and the recipe is exactly the same for all platforms.
+  # It is okay if the dependencies are not built for all platforms/versions, although selectors are still not allowed.
+  # See https://conda-forge.org/docs/maintainer/knowledge_base.html#noarch-python for more details.
+  # noarch: python
+  number: 0
+  # If the installation is complex, or different between Unix and Windows, use separate bld.bat and build.sh files instead of this key.
+  # By default, the package will be built for the Python versions supported by conda-forge and for all major OSs.
+  # Add the line "skip: True  # [py<35]" (for example) to limit to Python 3.5 and newer, or "skip: True  # [not win]" to limit to Windows.
+  # script: "{{ PYTHON }} -m pip install . -vv"
+  script_env:
+    - OGS_VERSION={{ version }}
+
+requirements:
+  build:
+    # If your project compiles code (such as a C extension) then add the required compilers as separate entries here.
+    # Compilers are named 'c', 'cxx' and 'fortran'.
+    - cmake
+    - ninja
+    - {{ compiler('c') }}
+    - {{ compiler('cxx') }}
+    #- hdf5 # is not found by CMake and there is runtime error
+    - boost
+    # - spdlog # include error
+  host:
+    - python
+    - pip
+  run:
+    - python
+
+test:
+  # Some packages might need a `test/commands` key to check CLI.
+  # List all the packages/modules that `run_test.py` imports.
+  # imports:
+    # - simplejson
+    # - simplejson.tests
+  # For python packages, it is useful to run pip check. However, sometimes the
+  # metadata used by pip is out of date. Thus this section is optional if it is
+  # failing.
+  # requires:
+    # - pip
+  commands:
+    - ogs --version
+
+about:
+  home: https://www.opengeosys.org
+  license: BSD-3-Clause
+  license_family: BSD
+  license_file: LICENSE.txt
+  summary: 'Simulation of thermo-hydro-mechanical-chemical (THMC) processes in porous and fractured media'
+  description: |
+    OpenGeoSys (OGS) is a scientific open source project for the development of
+    numerical methods for the simulation of thermo-hydro-mechanical-chemical
+    (THMC) processes in porous and fractured media. OGS is implemented in C++, it
+    is object-oriented with an focus on the numerical solution of coupled multi-field
+    problems (multi-physics). Parallel versions of OGS are available relying on
+    both MPI and OpenMP concepts. Application areas of OGS are currently CO2
+    sequestration, geothermal energy, water resources management, hydrology and
+    waste deposition.
+  doc_url: https://www.opengeosys.org/docs
+  dev_url: https://www.opengeosys.org/docs/devguide
+
+extra:
+  recipe-maintainers:
+    - bilke

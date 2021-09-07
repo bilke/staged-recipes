@@ -1,0 +1,64 @@
+diff --git a/scripts/cmake/Find.cmake b/scripts/cmake/Find.cmake
+index 5e914f0d2935..5f1fcaa719e9 100644
+--- a/scripts/cmake/Find.cmake
++++ b/scripts/cmake/Find.cmake
+@@ -2,13 +2,6 @@
+ # Find tools
+ # ##############################################################################
+ 
+-string(REPLACE ".windows.1" "" GIT_VERSION_STRING ${GIT_VERSION_STRING})
+-if(${GIT_VERSION_STRING} VERSION_LESS ${ogs.minimum_version.git})
+-    message(FATAL_ERROR "Git version ${ogs.minimum_version.git} is required. \
+-        Found version ${GIT_VERSION_STRING}."
+-    )
+-endif()
+-
+ find_package(Doxygen OPTIONAL_COMPONENTS dot)
+ if(TARGET Doxygen::dot)
+     # Create dependency graph in build dir with:
+diff --git a/scripts/cmake/GitSetup.cmake b/scripts/cmake/GitSetup.cmake
+index d7aa117ca154..8f2dd937391a 100644
+--- a/scripts/cmake/GitSetup.cmake
++++ b/scripts/cmake/GitSetup.cmake
+@@ -1,12 +1,25 @@
+-# Git detection
+-find_package(Git REQUIRED)
+-
+ # cmake-lint: disable=W0106
+ if(DEFINED ENV{OGS_VERSION})
+     set(OGS_VERSION $ENV{OGS_VERSION})
+-    message(STATUS "OGS VERSION: ${OGS_VERSION} (set via environment)")
++    message(STATUS "Using user-provided OGS_VERSION=${OGS_VERSION} (set via environment).")
++    return()
+ elseif(DEFINED OGS_VERSION)
+-    message(STATUS "Using user-provided OGS_VERSION=${OGS_VERSION}")
++    message(STATUS "Using user-provided OGS_VERSION=${OGS_VERSION}.")
++    return()
++endif()
++
++# Git detection
++find_package(Git)
++if(NOT Git_FOUND)
++    message(FATAL_ERROR "Git was not found. Either install Git or provide an \
++        OGS_VERSION as an environment- or CMake-variable!"
++)
++endif()
++string(REPLACE ".windows.1" "" GIT_VERSION_STRING ${GIT_VERSION_STRING})
++if(${GIT_VERSION_STRING} VERSION_LESS ${ogs.minimum_version.git})
++    message(FATAL_ERROR "Git version ${ogs.minimum_version.git} is required. \
++        Found version ${GIT_VERSION_STRING}."
++    )
+ endif()
+ 
+ if(NOT _IS_GIT_REPO)
+diff --git a/scripts/cmake/ProjectSetup.cmake b/scripts/cmake/ProjectSetup.cmake
+index 06d3bdc273e5..7090f1cef98d 100644
+--- a/scripts/cmake/ProjectSetup.cmake
++++ b/scripts/cmake/ProjectSetup.cmake
+@@ -39,5 +39,5 @@ endif()
+ file(RELATIVE_PATH relDir ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}
+      ${CMAKE_CURRENT_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}
+ )
+-set(CMAKE_INSTALL_RPATH ${BASEPOINT} ${BASEPOINT}/${relDir})
++list(APPEND CMAKE_INSTALL_RPATH ${BASEPOINT} ${BASEPOINT}/${relDir})
+ set(CMAKE_BUILD_WITH_INSTALL_RPATH TRUE)
